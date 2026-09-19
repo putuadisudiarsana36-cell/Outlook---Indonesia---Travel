@@ -1,0 +1,12 @@
+{
+  "name": "Outlook Indonesia Travel",
+  "short_name": "Outlook Travel",
+  "description": "Outlook Indonesia Travel — Shared Booking System",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f6fa",
+  "theme_color": "#0f172a",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

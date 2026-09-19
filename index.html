@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Outlook Travel">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+
+<title>Outlook Indonesia Travel — Booking</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6fa;color:#172033}
+header{background:#0f172a;color:#fff;padding:16px;position:sticky;top:0;z-index:20}header h1{margin:0;font-size:20px}header p{margin:5px 0 0;color:#cbd5e1;font-size:12px}
+main{max-width:1050px;margin:auto;padding:14px}.card{background:#fff;border:1px solid #dbe3ec;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px #0000000a}
+h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#475569}
+input,select,textarea,button{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:#fff}
+textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.primary{background:#0f172a;color:#fff;border-color:#0f172a}.secondary{background:#e2e8f0}.danger{background:#fee2e2;color:#991b1b;border-color:#fecaca}.success{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.tabs{display:flex;gap:6px;overflow:auto;margin-bottom:10px}.tabs button{width:auto;white-space:nowrap}.tabs button.active{background:#0f172a;color:#fff}
+.item{border:1px solid #dbe3ec;border-radius:11px;padding:11px;margin-top:9px;background:#fbfdff}.item pre{white-space:pre-wrap;margin:0;font:13px/1.5 Arial}.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.row button{width:auto;padding:8px 11px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#e2e8f0}.hidden{display:none!important}.muted{color:#64748b;font-size:12px}.notice{padding:10px;border-radius:9px;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;font-size:12px}
+.login{max-width:460px;margin:40px auto}.login h1{text-align:center}.small{font-size:11px}.ok{color:#166534}.err{color:#b91c1c;white-space:pre-wrap}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr 1fr}.full{grid-column:auto}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="pwaInstallBar" style="display:none;position:sticky;top:0;z-index:50;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:8px 12px;text-align:center">
+  <button id="pwaInstallBtn" class="primary" type="button" style="max-width:360px">📲 Install Outlook Indonesia Travel</button>
+</div>
+<header><h1>Outlook Indonesia Travel</h1><p>Get Your Guide Local Partner — Shared Booking System</p></header>
+
+<div id="loginView" class="login card">
+  <h1>Login</h1>
+  <p class="muted">Gunakan akun yang sudah disetujui Admin.</p>
+  <div class="grid">
+    <div class="full"><label>Email</label><input id="loginEmail" type="email"></div>
+    <div class="full"><label>Password</label><input id="loginPassword" type="password"></div>
+  </div>
+  <button class="primary" onclick="login()">Login</button>
+  <button class="secondary" style="margin-top:8px" onclick="showRequest()">Request Access</button>
+  <div id="loginMsg" class="small"></div>
+  <hr>
+  <div class="notice"><b>Setup pertama:</b> isi konfigurasi Supabase di menu Setup Cloud setelah file ini dibuka. Aplikasi ini dirancang untuk satu database bersama agar data dapat dilihat dari HP berbeda.</div>
+
+<div id="setupLoginCard" class="card">
+    <h2>Setup Cloud</h2>
+    <p class="muted">Masukkan URL dan Publishable/Anon Key Supabase. Keduanya bukan password admin. Database tetap dilindungi Row Level Security.</p>
+    <div class="grid">
+      <div class="full"><label>Supabase URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+      <div class="full"><label>Supabase Publishable / Anon Key</label><textarea id="sbKey" style="min-height:100px"></textarea></div>
+    </div>
+    <button id="saveCloudBtn" class="primary" type="button">Simpan & Hubungkan</button>
+    <div id="cloudStatus" class="small" style="margin-top:8px;font-weight:700"></div>
+    <p class="small muted">Setelah database dibuat dengan SQL yang disertakan, buka ulang file ini atau tekan tombol hubungkan.</p>
+  </div></div>
+
+<div id="requestView" class="login card hidden">
+  <h2>Request Access</h2>
+  <p class="muted">Permintaan harus disetujui Admin sebelum akun dapat menggunakan aplikasi.</p>
+  <div class="grid">
+    <div class="full"><label>Nama</label><input id="reqName"></div>
+    <div class="full"><label>Email</label><input id="reqEmail" type="email"></div>
+    <div class="full"><label>Password</label><input id="reqPassword" type="password"></div>
+    <div class="full"><label>Keterangan</label><textarea id="reqNote"></textarea></div>
+  </div>
+  <button class="primary" onclick="requestAccess()">Kirim Request</button>
+  <button class="secondary" style="margin-top:8px" onclick="showLogin()">Kembali</button>
+  <div id="reqMsg" class="small"></div>
+</div>
+
+<div id="appView" class="hidden">
+<main>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+      <div><b id="who"></b><div id="role" class="muted"></div></div>
+      <button style="width:auto" class="secondary" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  
+
+  <div id="bookingCard" class="card">
+    <h2>Booking Input</h2>
+    <div class="grid">
+      <div class="full"><label>Note</label><select id="note"><option value="">—</option><option>Sharing</option><option>Private</option></select></div>
+      <div><label>Driver Name</label><select id="driverName"><option value="">—</option><option>ADI PUTRA</option><option>AGUS WIDI</option><option>ALFA</option><option>ANANDA</option><option>BELEX</option><option>DOYOK</option><option>GEDE JERINK</option><option>GEDE KARI</option><option>JIK ONOT</option><option>KETUT WID</option><option>NENGAH JHON</option><option>PAK JUNY</option><option>PUTU ADI</option><option value="__CUSTOM__">Custom</option></select></div>
+      <div><label>Driver Custom</label><input id="driverCustom" placeholder="Isi jika Custom"></div>
+      <div><label>Plat Number</label><input id="plate"></div>
+      <div><label>Type</label><select id="type"><option value="">—</option><option>AP</option><option>SGW</option><option>EW</option><option>SG</option><option value="__CUSTOM__">Custom</option></select></div>
+      <div><label>Type Custom</label><input id="typeCustom"></div>
+      <div><label>Number</label><select id="number"></select></div>
+      <div><label>Time</label><input id="time" type="time"></div>
+      <div><label>Date</label><input id="date" type="date"></div>
+      <div><label>Code</label><input id="code"></div>
+      <div class="full"><label>Book</label><select id="book"><option value="">—</option><option>Small Group Nusa Penida West Only Tour With Bali Transfer</option><option>Small Group Nusa Penida East & West Tour With Bali Transfer</option><option>Private Nusa Penida Highlight East & West Full Day Tour</option><option value="__CUSTOM__">Custom</option></select></div>
+      <div class="full"><label>Book Custom</label><input id="bookCustom"></div>
+      <div><label>Guest Name</label><input id="guestName"></div>
+      <div><label>Num Adult</label><select id="numAdult"></select></div>
+      <div><label>Phone</label><input id="phone"></div>
+      <div><label>Pick Up</label><input id="pickup"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="saveBooking()">Save Booking</button>
+      <button class="secondary" onclick="clearForm()">Clear</button>
+      <button class="secondary" onclick="exportExcel()">Export Excel</button>
+      <button class="secondary" onclick="backupJSON()">Backup JSON</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>WhatsApp Driver</h2>
+    <input id="driverWa" placeholder="+628123456789">
+    <button class="primary" style="margin-top:8px" onclick="sendAllDrivers()">Send All Driver Data</button>
+  </div>
+
+  <div class="card">
+    <h2>Saved Data</h2>
+    <div class="tabs">
+      <button id="tabAll" class="active" onclick="setTab('all')">All</button>
+      <button id="tabDriver" onclick="setTab('driver')">Driver</button>
+      <button id="tabGuest" onclick="setTab('guest')">Guest</button>
+    </div>
+    <input id="search" placeholder="Search Code, Guest, Driver, Phone..." oninput="render()">
+    <div id="saved"></div>
+  </div>
+
+  <div id="adminCard" class="card hidden">
+    <h2>👥 User Management</h2>
+    <p class="muted">Khusus Admin. User baru harus membuat akun melalui <b>Request Access</b>. Setelah itu Admin dapat menyetujui, menolak, mengaktifkan/nonaktifkan, dan mengubah role Staff/Viewer.</p>
+    <div class="actions" style="margin-bottom:10px">
+      <button class="primary" onclick="loadUsers()">Refresh User</button>
+      <button class="secondary" onclick="showRequestFromAdmin()">Info Tambah User</button>
+    </div>
+    <div id="users"></div>
+  </div>
+</main>
+</div>
+
+<script>
+const LS='oit_cloud_config_v1';
+let sbClient=null, profile=null, tab='all', cache=[];
+
+const $=id=>document.getElementById(id);
+function showLogin(){$('loginView').classList.remove('hidden');$('requestView').classList.add('hidden')}
+function showRequest(){$('loginView').classList.add('hidden');$('requestView').classList.remove('hidden')}
+function msg(id,t,ok=false){$(id).textContent=t;$(id).className='small '+(ok?'ok':'err')}
+function cfg(){try{return JSON.parse(localStorage.getItem(LS)||'{}')}catch{return{}}}
+async function loadSupabase(){
+  if(window.supabase && typeof window.supabase.createClient==='function') return window.supabase;
+  throw new Error('Library Supabase belum termuat. Periksa koneksi internet lalu refresh halaman.');
+}
+async function connect(){
+  const c=cfg();
+  if(!c.url||!c.key)return false;
+  await loadSupabase();
+  sbClient=window.supabase.createClient(c.url,c.key);
+  return true;
+}
+async function saveCloud(){
+  const status=$('cloudStatus');
+  const setStatus=(t,ok=false)=>{if(status){status.textContent=t;status.className='small '+(ok?'ok':'err')}};
+  const url=$('sbUrl').value.trim().replace(/\/$/,'');
+  const key=$('sbKey').value.trim();
+  if(!url||!key){setStatus('❌ Supabase URL dan Publishable/Anon Key wajib diisi.');return;}
+  if(!/^https:\/\/[^\s]+\.supabase\.co$/.test(url)){setStatus('❌ Format Supabase URL tidak benar. Contoh: https://xxxx.supabase.co');return;}
+  try{
+    setStatus('⏳ Menghubungkan ke Supabase...');
+    await loadSupabase();
+    const client=window.supabase.createClient(url,key);
+    const {error}=await client.auth.getSession();
+    if(error) throw error;
+    // Simpan hanya setelah koneksi berhasil.
+    localStorage.setItem(LS,JSON.stringify({url,key}));
+    sbClient=client;
+    $('sbUrl').value=url;
+    $('sbKey').value=key;
+    setStatus('✅ Koneksi Supabase berhasil. Silakan Login atau Request Access.',true);
+  }catch(e){
+    console.error(e);
+    setStatus('❌ Gagal menghubungkan Supabase: '+(e?.message||e));
+  }
+}
+async function requestAccess(){
+  try{
+    await connect();
+    if(!sbClient)return msg('reqMsg','Cloud belum dikonfigurasi.');
+    const name=$('reqName').value.trim(),email=$('reqEmail').value.trim(),password=$('reqPassword').value,note=$('reqNote').value.trim();
+    if(!name||!email||!password)return msg('reqMsg','Nama, email dan password wajib diisi.');
+    const {error}=await sbClient.auth.signUp({email,password,options:{data:{name,request_note:note}}});
+    if(error)return msg('reqMsg',error.message);
+    msg('reqMsg','Request sudah dikirim. Tunggu konfirmasi Admin sebelum menggunakan aplikasi.',true);
+  }catch(e){msg('reqMsg','❌ '+(e?.message||e));}
+}
+async function login(){
+  try{
+    await connect();
+    if(!sbClient)return msg('loginMsg','Cloud belum dikonfigurasi. Gunakan Setup Cloud setelah masuk.');
+    const email=$('loginEmail').value.trim(),password=$('loginPassword').value;
+    if(!email||!password)return msg('loginMsg','Email dan password wajib diisi.');
+    msg('loginMsg','⏳ Memeriksa login...',true);
+    const {error}=await sbClient.auth.signInWithPassword({email,password});
+    if(error)return msg('loginMsg','❌ Login Supabase gagal: '+error.message);
+    await startApp();
+  }catch(e){
+    console.error(e);
+    msg('loginMsg','❌ Error aplikasi: '+(e?.message||e));
+  }
+}
+async function logout(){if(sbClient)await sbClient.auth.signOut();location.reload()}
+async function startApp(){
+  try{
+    const {data:{session},error:sessionError}=await sbClient.auth.getSession();
+    if(sessionError)throw new Error('Gagal membaca session: '+sessionError.message);
+    const user=session?.user;
+    if(!user){msg('loginMsg','❌ Login berhasil tetapi session tidak ditemukan. Silakan Login lagi.');return;}
+
+    // Cari profil berdasarkan auth.uid(), bukan email.
+    const {data:p,error}=await sbClient
+      .from('profiles')
+      .select('id,name,email,role,status')
+      .eq('id',user.id)
+      .maybeSingle();
+
+    if(error){
+      console.error('Profile query error:',error);
+      await sbClient.auth.signOut();
+      return msg('loginMsg',
+        '❌ Profil tidak dapat dibaca.\n' +
+        'Code: '+(error.code||'-')+' | '+(error.message||'')+
+        (error.details?' | Detail: '+error.details:'')+
+        (error.hint?' | Hint: '+error.hint:'')
+      );
+    }
+
+    if(!p){
+      await sbClient.auth.signOut();
+      return msg('loginMsg',
+        '❌ Akun Auth ditemukan, tetapi profil tidak ditemukan.\n' +
+        'Auth ID: '+user.id
+      );
+    }
+
+    if(p.status!=='approved'){
+      await sbClient.auth.signOut();
+      return msg('loginMsg','❌ Akses belum disetujui Admin. Status akun: '+(p.status||'kosong'));
+    }
+
+    profile=p;
+    $('loginView').classList.add('hidden');
+    $('requestView').classList.add('hidden');
+    $('appView').classList.remove('hidden');
+    $('who').textContent=p.name||user.email;
+    $('role').textContent=(p.role||'staff').toUpperCase();
+    if(p.role==='admin'){$('adminCard').classList.remove('hidden');loadUsers()}
+    await loadBookings();
+  }catch(e){
+    console.error('startApp error:',e);
+    try{await sbClient.auth.signOut()}catch(_){}
+    msg('loginMsg','❌ Error saat membuka aplikasi: '+(e?.message||e));
+  }
+}
+async function loadBookings(){
+  const {data,error}=await sbClient.from('bookings').select('*').order('created_at',{ascending:false});
+  if(error)return alert(error.message);cache=data||[];render();
+}
+function fmtDate(s){if(!s)return '';const [y,m,d]=s.split('-');return d+' - '+m+' - '+y}
+function fmtTime(s){if(!s)return '';const [hh,mm]=s.split(':');let h=+hh;const ap=h>=12?'PM':'AM';h=h%12||12;return String(h).padStart(2,'0')+'.'+mm+' '+ap}
+function selected(id,customId){
+  const v=$(id).value; return v==='__CUSTOM__'?$(customId).value.trim():v;
+}
+function readForm(){
+  return {note:$('note').value,driver:selected('driverName','driverCustom'),plate:$('plate').value.trim(),
+    type:selected('type','typeCustom'),number:$('number').value,time:$('time').value,date:$('date').value,
+    code:$('code').value.trim(),book:selected('book','bookCustom'),guest_name:$('guestName').value.trim(),
+    num_adult:$('numAdult').value,phone:$('phone').value.trim(),pickup:$('pickup').value.trim()};
+}
+async function saveBooking(){
+  if(!profile)return;
+  const b=readForm();
+  let existing=null;
+  if(b.code)existing=cache.find(x=>(x.code||'').trim()===b.code);
+  if(existing){
+    // Only non-empty fields are applied. Blank/default fields never overwrite existing values.
+    const patch={};
+    Object.entries(b).forEach(([k,v])=>{if(v!==''&&v!==null&&v!==undefined)patch[k]=v});
+    patch.updated_by=profile.id;
+    const {error}=await sbClient.from('bookings').update(patch).eq('id',existing.id);
+    if(error)return alert(error.message);
+  }else{
+    b.created_by=profile.id;b.updated_by=profile.id;
+    const {error}=await sbClient.from('bookings').insert(b);
+    if(error)return alert(error.message);
+  }
+  clearForm();await loadBookings();alert(existing?'Booking berhasil dilengkapi berdasarkan Code.':'Booking berhasil disimpan.');
+}
+function clearForm(){document.querySelectorAll('#bookingCard input,#bookingCard select').forEach(x=>{if(x.id!=='number'&&x.id!=='numAdult')x.value=''});$('number').value='1';$('numAdult').value='1'}
+function driverText(b){
+return `DRIVER ASSIGNMENT
+Outlook Indonesia Travel
+
+Driver       : ${b.driver||''}
+Vehicle      : ${b.plate||''}
+Type / No.   : ${b.type||''}${b.number?'. '+b.number:''}
+Date         : ${fmtDate(b.date)}
+Booking Code : ${b.code||''}
+Note         : ${b.note||''}
+
+Pick Up Time : ${fmtTime(b.time)}
+Guest Name   : ${b.guest_name||''}
+Guest Phone  : ${b.phone||''}
+Pick Up      : ${b.pickup||''}`;
+}
+function guestText(b){
+return `Dear Mr/Mrs ${b.guest_name||''}
+
+Greetings from Outlook Indonesia Travel Get Your Guide Local Partner.
+
+We are excited to inform you that your booking for The Nusa Penida Trip with the following details is confirmed :
+
+${b.type||''}${b.number?'. '+b.number:''}
+Date : ${fmtDate(b.date)}
+Code : ${b.code||''}
+
+Book : ${b.book||''}
+Name : ${b.guest_name||''}
+Num : ${b.num_adult||''} Adult
+Phone : ${b.phone||''}
+
+📍${b.pickup||''}
+Note : ${b.note||''}
+
+
+Our driver team will contact you via whatsapp to confirm the pick up time later.
+
+We hope you truly enjoy this trip and make lots of beautiful memories that you’ll cherish forever. ✨
+
+
+Best Regards,
+
+Outlook Indonesia Travel`;
+}
+function render(){
+  const q=$('search').value.toLowerCase();let arr=cache.filter(b=>JSON.stringify(b).toLowerCase().includes(q));
+  if(tab==='driver')arr=arr.filter(b=>b.driver||b.plate);
+  if(tab==='guest')arr=arr.filter(b=>b.guest_name||b.phone);
+  $('saved').innerHTML=arr.map(b=>`<div class="item"><pre>${esc(tab==='driver'?driverText(b):tab==='guest'?guestText(b):(driverText(b)+'\\n\\n'+guestText(b)))}</pre>
+  <div class="row"><button onclick="edit('${b.id}')">Edit</button><button onclick="copyText(${JSON.stringify(tab==='driver'?driverText(b):tab==='guest'?guestText(b):(driverText(b)+'\\n\\n'+guestText(b)))})">Copy</button>${b.phone?`<button onclick="wa('${b.phone}',${JSON.stringify(guestText(b))})">WhatsApp Guest</button>`:''}<button class="danger" onclick="del('${b.id}')">Delete</button></div></div>`).join('')||'<p class="muted">Belum ada data.</p>';
+}
+function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function setTab(t){tab=t;['All','Driver','Guest'].forEach(x=>$('tab'+x).classList.remove('active'));$('tab'+t[0].toUpperCase()+t.slice(1)).classList.add('active');render()}
+function edit(id){
+  const b=cache.find(x=>x.id===id);if(!b)return;
+  const set=(id,v)=>{if($(id))$(id).value=v||''};
+  set('note',b.note);set('plate',b.plate);set('number',b.number||'1');set('time',b.time);set('date',b.date);set('code',b.code);set('guestName',b.guest_name);set('numAdult',b.num_adult||'1');set('phone',b.phone);set('pickup',b.pickup);
+  set('driverName',b.driver);set('type',b.type);set('book',b.book);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function del(id){if(!confirm('Hapus booking ini?'))return;const {error}=await sbClient.from('bookings').delete().eq('id',id);if(error)return alert(error.message);loadBookings()}
+function copyText(t){navigator.clipboard?.writeText(t).then(()=>alert('Berhasil di-copy.'))}
+function wa(phone,text){location.href='https://wa.me/'+phone.replace(/\D/g,'')+'?text='+encodeURIComponent(text)}
+function sendAllDrivers(){
+  const n=$('driverWa').value.trim();if(!n)return alert('Isi WhatsApp Driver.');
+  const text=cache.filter(b=>b.driver||b.plate).map(driverText).join('\\n\\n────────────────────\\n\\n');
+  location.href='https://wa.me/'+n.replace(/\D/g,'')+'?text='+encodeURIComponent(text);
+}
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const d=cache.map(b=>({Date:fmtDate(b.date),Time:fmtTime(b.time),Driver:b.driver,Plate:b.plate,Type:b.type,Number:b.number,Code:b.code,Note:b.note,'Guest Name':b.guest_name,Phone:b.phone,'Pick Up':b.pickup}));
+  const g=cache.map(b=>({Date:fmtDate(b.date),Code:b.code,Note:b.note,Type:b.type,Number:b.number,Book:b.book,Name:b.guest_name,'Num Adult':b.num_adult,Phone:b.phone,'Pick Up':b.pickup}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d),'DRIVER');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(g),'GUEST');
+  XLSX.writeFile(wb,'outlook_indonesia_travel_bookings.xlsx');
+}
+function backupJSON(){const blob=new Blob([JSON.stringify(cache,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='outlook_indonesia_travel_backup.json';a.click()}
+function showRequestFromAdmin(){
+  alert('Cara menambah user:\n\n1. User baru buka aplikasi.\n2. Tekan Request Access.\n3. Isi Nama, Email, Password, lalu Kirim Request.\n4. Setelah muncul di User Management, Admin tekan Approve.\n5. Role awal otomatis Staff dan bisa diubah menjadi Viewer.');
+}
+
+async function loadUsers(){
+  if(!profile || profile.role!=='admin')return;
+  const box=$('users');
+  box.innerHTML='<p class="muted">⏳ Memuat daftar user...</p>';
+  const {data,error}=await sbClient.from('profiles').select('id,name,email,request_note,role,status,created_at,updated_at').order('created_at',{ascending:false});
+  if(error){box.innerHTML='<p class="err">❌ '+esc(error.message)+'</p>';return;}
+  const rows=data||[];
+  if(!rows.length){box.innerHTML='<p class="muted">Belum ada user.</p>';return;}
+  box.innerHTML=rows.map(r=>{
+    const self=r.id===profile.id;
+    const status=r.status||'pending';
+    const role=r.role||'staff';
+    let actions='';
+    if(!self){
+      if(status==='pending') actions += `<button class="success" onclick="approveUser('${r.id}')">Approve</button><button class="danger" onclick="rejectUser('${r.id}')">Reject</button>`;
+      else if(status==='approved') actions += `<button class="danger" onclick="disableUser('${r.id}')">Disable</button>`;
+      else if(status==='disabled' || status==='rejected') actions += `<button class="success" onclick="activateUser('${r.id}')">Activate</button>`;
+      actions += `<select style="width:auto;min-width:120px" onchange="changeUserRole('${r.id}',this.value)">`+
+        `<option value="staff" ${role==='staff'?'selected':''}>Staff</option>`+
+        `<option value="viewer" ${role==='viewer'?'selected':''}>Viewer</option>`+
+        `<option value="admin" ${role==='admin'?'selected':''}>Admin</option>`+
+        `</select>`;
+    } else {
+      actions='<span class="badge">Akun Anda</span>';
+    }
+    return `<div class="item">`+
+      `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">`+
+      `<div><b>${esc(r.name||'(No name)')}</b><br><span class="muted">${esc(r.email||'')}</span></div>`+
+      `<div><span class="badge">${esc(role.toUpperCase())}</span> <span class="badge">${esc(status.toUpperCase())}</span></div>`+
+      `</div>`+
+      (r.request_note?`<div class="small muted" style="margin-top:7px">Keterangan: ${esc(r.request_note)}</div>`:'')+
+      `<div class="row">${actions}</div>`+
+      `</div>`;
+  }).join('');
+}
+
+async function updateUser(uid, patch, successText){
+  if(!profile || profile.role!=='admin')return alert('Hanya Admin yang dapat mengelola user.');
+  if(uid===profile.id && (patch.role && patch.role!=='admin' || patch.status && patch.status!=='approved'))
+    return alert('Akun Admin yang sedang digunakan tidak dapat dinonaktifkan atau diturunkan role-nya dari halaman ini.');
+  const {error}=await sbClient.from('profiles').update(patch).eq('id',uid);
+  if(error)return alert('Gagal mengubah user: '+error.message);
+  await loadUsers();
+  alert(successText);
+}
+
+async function approveUser(uid){
+  await updateUser(uid,{status:'approved',role:'staff'},'User disetujui sebagai Staff.');
+}
+async function rejectUser(uid){
+  if(!confirm('Tolak request user ini?'))return;
+  await updateUser(uid,{status:'rejected'},'Request user ditolak.');
+}
+async function disableUser(uid){
+  if(!confirm('Nonaktifkan user ini? User tidak dapat menggunakan aplikasi sampai diaktifkan kembali.'))return;
+  await updateUser(uid,{status:'disabled'},'User berhasil dinonaktifkan.');
+}
+async function activateUser(uid){
+  await updateUser(uid,{status:'approved'},'User berhasil diaktifkan.');
+}
+async function changeUserRole(uid,role){
+  if(!['admin','staff','viewer'].includes(role))return;
+  await updateUser(uid,{role},'Role user berhasil diubah menjadi '+role.toUpperCase()+'.');
+}
+
+// Fallback event handler: avoids relying on inline onclick.
+document.addEventListener('DOMContentLoaded', function(){
+  const btn=document.getElementById('saveCloudBtn');
+  if(btn){
+    btn.addEventListener('click', function(ev){
+      ev.preventDefault();
+      saveCloud().catch(function(e){ const st=document.getElementById('cloudStatus'); if(st){st.textContent='❌ Error tombol: '+(e?.message||e);st.className='small err';} });
+    });
+  }
+});
+
+async function init(){
+  for(let i=1;i<=100;i++){let o=document.createElement('option');o.value=i;o.textContent=i; $('number').appendChild(o);let a=o.cloneNode(true);a.textContent=i+' Adult';$('numAdult').appendChild(a)}
+  $('number').value='1';$('numAdult').value='1';
+  const c=cfg();if(c.url&&c.key){try{await connect();const {data:{session}}=await sbClient.auth.getSession();if(session)await startApp()}catch(e){console.error(e);msg('loginMsg','❌ Gagal memulihkan session: '+(e?.message||e))}}
+}
+init();
+</script>
+
+<script>
+(function(){
+  let deferredPrompt = null;
+  const bar = document.getElementById('pwaInstallBar');
+  const btn = document.getElementById('pwaInstallBtn');
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    if(bar) bar.style.display = 'block';
+  });
+
+  if(btn){
+    btn.addEventListener('click', async function(){
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch(e) {}
+      deferredPrompt = null;
+      bar.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('appinstalled', function(){
+    deferredPrompt = null;
+    if(bar) bar.style.display = 'none';
+  });
+
+  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js', {scope:'./'})
+        .catch(function(err){ console.warn('PWA service worker:', err); });
+    });
+  }
+})();
+</script>
+
+</body></html>
