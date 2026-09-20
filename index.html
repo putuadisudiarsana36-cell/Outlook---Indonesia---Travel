@@ -488,12 +488,32 @@ function edit(id){
 }
 async function del(id){if(profile?.role==='viewer')return alert('Viewer tidak dapat menghapus booking.');if(!confirm('Hapus booking ini?'))return;const {error}=await sbClient.from('bookings').delete().eq('id',id);if(error)return alert(error.message);loadBookings()}
 function copyText(t){navigator.clipboard?.writeText(t).then(()=>alert('Berhasil di-copy.'))}
-function wa(phone,text){location.href='https://wa.me/'+phone.replace(/\D/g,'')+'?text='+encodeURIComponent(text)}
+function normalizeWhatsAppNumber(phone){
+  let raw=String(phone||'').trim();
+  if(!raw)return '';
+  if(raw.startsWith('+'))return raw.replace(/\D/g,'');
+  if(raw.startsWith('00'))return raw.slice(2).replace(/\D/g,'');
+  const digits=raw.replace(/\D/g,'');
+  // Common local formats used by the booking system.
+  if(/^08\d{8,12}$/.test(digits))return '62'+digits.slice(1);
+  if(/^0(?:15|16|17)\d{7,10}$/.test(digits))return '49'+digits.slice(1);
+  return digits;
+}
+function openWhatsApp(phone,text){
+  const n=normalizeWhatsAppNumber(phone);
+  if(!n){alert('Nomor WhatsApp tidak valid.');return false;}
+  const url='https://wa.me/'+n+'?text='+encodeURIComponent(String(text||''));
+  const w=window.open(url,'_blank','noopener,noreferrer');
+  if(!w)window.location.href=url;
+  return true;
+}
+function wa(phone,text){return openWhatsApp(phone,text)}
 function sendAllDrivers(){
   if(profile?.role==='viewer')return alert('Viewer tidak dapat mengirim WhatsApp Driver.');
   const n=$('driverWa').value.trim();if(!n)return alert('Isi WhatsApp Driver.');
-  const text=cache.filter(b=>b.driver||b.plate).map(driverText).join('\\n\\n────────────────────\\n\\n');
-  location.href='https://wa.me/'+n.replace(/\D/g,'')+'?text='+encodeURIComponent(text);
+  // ALL booking records are included, even when Driver/Plate or other fields are empty.
+  const text=cache.map(driverText).join('\\n\\n────────────────────\\n\\n');
+  openWhatsApp(n,text);
 }
 function exportExcel(){
   if(profile?.role==='viewer')return alert('Viewer tidak dapat export Excel.');
