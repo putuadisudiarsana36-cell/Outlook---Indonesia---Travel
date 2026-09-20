@@ -1,26 +1,13 @@
 {
-  "id": "./",
-  "name": "Outlook Indonesia Travel",
-  "short_name": "Outlook Travel",
-  "description": "Shared booking system untuk Outlook Indonesia Travel — Get Your Guide Local Partner.",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#0f172a",
-  "icons": [
-    {
-      "src": "./outlook_icon_192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./outlook_icon_512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+  "name":"Outlook Indonesia Travel",
+  "short_name":"Outlook Travel",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#ffffff",
+  "theme_color":"#10182b",
+  "icons":[
+    {"src":"outlook_icon_192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"outlook_icon_512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ]
 }

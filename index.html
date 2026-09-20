@@ -3,15 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="theme-color" content="#0f172a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Outlook Travel">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./outlook_icon_192.png" type="image/png">
-<link rel="apple-touch-icon" href="./outlook_icon_192.png">
 <title>Outlook Indonesia Travel — Booking</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#10182b">
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6fa;color:#172033}
 header{background:#0f172a;color:#fff;padding:16px;position:sticky;top:0;z-index:20}header h1{margin:0;font-size:20px}header p{margin:5px 0 0;color:#cbd5e1;font-size:12px}
@@ -24,10 +18,6 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
 .item{border:1px solid #dbe3ec;border-radius:11px;padding:11px;margin-top:9px;background:#fbfdff}.item pre{white-space:pre-wrap;margin:0;font:13px/1.5 Arial}.row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.row button{width:auto;padding:8px 11px}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#e2e8f0}.hidden{display:none!important}.muted{color:#64748b;font-size:12px}.notice{padding:10px;border-radius:9px;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;font-size:12px}
 .login{max-width:460px;margin:40px auto}.login h1{text-align:center}.small{font-size:11px}.ok{color:#166534}.err{color:#b91c1c;white-space:pre-wrap}
-.pwa-install{display:none;position:fixed;right:12px;bottom:12px;z-index:9999;width:auto;padding:11px 14px;border-radius:999px;background:#0f172a;color:#fff;border:1px solid #334155;box-shadow:0 6px 20px #0003;font-weight:700}
-.pwa-install.show{display:block}
-.pwa-install.secondary-mode{background:#fff;color:#0f172a}
-
 @media(max-width:680px){.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr 1fr}.full{grid-column:auto}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -35,7 +25,6 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
 </head>
 <body>
 <header><h1>Outlook Indonesia Travel</h1><p>Get Your Guide Local Partner — Shared Booking System</p></header>
-<button id="pwaInstallBtn" class="pwa-install show" type="button" aria-label="Install Outlook Indonesia Travel">📲 Install Outlook Indonesia Travel</button>
 
 <div id="loginView" class="login card">
   <h1>Login</h1>
@@ -89,31 +78,47 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
 
   <div id="viewerCard" class="card hidden"><h2>🚗 Driver Schedule</h2><p class="muted">Viewer hanya dapat melihat jadwal Driver hari ini dan besok.</p><div id="viewerToday"></div><div id="viewerTomorrow" style="margin-top:14px"></div></div>
 
-  <div id="bookingCard" class="card">
-    <h2>Booking Input</h2>
-    <div class="grid">
-      <div class="full"><label>Note</label><select id="note"><option value="">—</option><option>Sharing</option><option>Private</option></select></div>
-      <div><label>Driver Name</label><select id="driverName"><option value="">—</option><option>ADI PUTRA</option><option>AGUS WIDI</option><option>ALFA</option><option>ANANDA</option><option>BELEX</option><option>DOYOK</option><option>GEDE JERINK</option><option>GEDE KARI</option><option>JIK ONOT</option><option>KETUT WID</option><option>NENGAH JHON</option><option>PAK JUNY</option><option>PUTU ADI</option><option value="__CUSTOM__">Custom</option></select></div>
-      <div><label>Driver Custom</label><input id="driverCustom" placeholder="Isi jika Custom"></div>
-      <div><label>Plat Number</label><input id="plate"></div>
-      <div><label>Type</label><select id="type"><option value="">—</option><option>AP</option><option>SGW</option><option>EW</option><option>SG</option><option value="__CUSTOM__">Custom</option></select></div>
-      <div><label>Type Custom</label><input id="typeCustom"></div>
-      <div><label>Number</label><select id="number"></select></div>
-      <div><label>Time</label><input id="time" type="time"></div>
-      <div><label>Date</label><input id="date" type="date"></div>
-      <div><label>Code</label><input id="code"></div>
-      <div class="full"><label>Book</label><select id="book"><option value="">—</option><option>Small Group Nusa Penida West Only Tour With Bali Transfer</option><option>Small Group Nusa Penida East & West Tour With Bali Transfer</option><option>Private Nusa Penida Highlight East & West Full Day Tour</option><option value="__CUSTOM__">Custom</option></select></div>
-      <div class="full"><label>Book Custom</label><input id="bookCustom"></div>
-      <div><label>Guest Name</label><input id="guestName"></div>
-      <div><label>Num Adult</label><select id="numAdult"></select></div>
-      <div><label>Phone</label><input id="phone"></div>
-      <div><label>Pick Up</label><input id="pickup"></div>
+  <div id="bookingCard">
+    <div class="card">
+      <h2>🚗 Form Input Driver</h2>
+      <div class="grid">
+        <div class="full"><label>Note</label><select id="driverNote"><option value="">—</option><option>Sharing</option><option>Private</option></select></div>
+        <div><label>Driver Name</label><select id="driverName"><option value="">—</option></select><div id="driverCustomBox" class="hidden" style="margin-top:6px"><input id="driverCustom" placeholder="Isi Driver Custom"><label style="margin-top:6px;font-weight:400"><input id="saveDriverCustom" type="checkbox" style="width:auto"> Simpan untuk digunakan kembali</label></div></div>
+        <div><label>Plat Number</label><input id="plate"></div>
+        <div><label>Type</label><select id="type"><option value="">—</option></select><div id="typeCustomBox" class="hidden" style="margin-top:6px"><input id="typeCustom" placeholder="Isi Type Custom"><label style="margin-top:6px;font-weight:400"><input id="saveTypeCustom" type="checkbox" style="width:auto"> Simpan untuk digunakan kembali</label></div></div>
+        <div><label>Number</label><select id="number"></select></div>
+        <div><label>Time</label><input id="time" type="time"></div>
+        <div><label>Date</label><input id="date" type="date"></div>
+        <div><label>Code</label><input id="driverCode"></div>
+      </div>
+      <div class="actions">
+        <button class="primary" onclick="saveDriverBooking()">Save Driver</button>
+        <button class="secondary" onclick="clearDriverForm()">Clear Driver</button>
+      </div>
     </div>
-    <div class="actions">
-      <button class="primary" onclick="saveBooking()">Save Booking</button>
-      <button class="secondary" onclick="clearForm()">Clear</button>
-      <button class="secondary" onclick="exportExcel()">Export Excel</button>
-      <button class="secondary" onclick="backupJSON()">Backup JSON</button>
+
+    <div class="card">
+      <h2>👤 Form Input Guest</h2>
+      <div class="grid">
+        <div class="full"><label>Code</label><input id="guestCode"></div>
+        <div class="full"><label>Book</label><select id="book"><option value="">—</option></select><div id="bookCustomBox" class="hidden" style="margin-top:6px"><input id="bookCustom" placeholder="Isi Book Custom"><label style="margin-top:6px;font-weight:400"><input id="saveBookCustom" type="checkbox" style="width:auto"> Simpan untuk digunakan kembali</label></div></div>
+        <div><label>Guest Name</label><input id="guestName"></div>
+        <div><label>Num</label><select id="numAdult"></select></div>
+        <div><label>Phone</label><input id="phone"></div>
+        <div><label>Pick Up</label><input id="pickup"></div>
+        <div class="full"><label>Note</label><select id="guestNote"><option value="">—</option><option>Sharing</option><option>Private</option></select></div>
+      </div>
+      <div class="actions">
+        <button class="primary" onclick="saveGuestBooking()">Save Guest</button>
+        <button class="secondary" onclick="clearGuestForm()">Clear Guest</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="actions">
+        <button class="secondary" onclick="exportExcel()">Export Excel</button>
+        <button class="secondary" onclick="backupJSON()">Backup JSON</button>
+      </div>
     </div>
   </div>
 
@@ -127,10 +132,13 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
     <h2>Saved Data</h2>
     <div class="tabs">
       <button id="tabAll" class="active" onclick="setTab('all')">All</button>
-      <button id="tabDriver" onclick="setTab('driver')">Driver</button>
-      <button id="tabGuest" onclick="setTab('guest')">Guest</button>
+      <button id="tabDriver" onclick="setTab('driver')">Driver Data</button>
+      <button id="tabGuest" onclick="setTab('guest')">Guest Data</button>
     </div>
-    <input id="search" placeholder="Search Code, Guest, Driver, Phone..." oninput="render()">
+    <div class="grid">
+      <div><label>Search</label><input id="search" placeholder="Code, Guest, Driver, Phone..." oninput="render()"></div>
+      <div><label>Filter Date</label><select id="dateFilter" onchange="dateFilterChanged()"><option value="all">Semua Tanggal</option><option value="today">Hari Ini</option><option value="tomorrow">Besok</option><option value="7days">7 Hari</option><option value="custom">Pilih Tanggal</option></select><input id="searchDate" type="date" class="hidden" style="margin-top:6px" onchange="render()"></div>
+    </div>
     <div id="saved"></div>
   </div>
 
@@ -148,7 +156,10 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
 
 <script>
 const LS='oit_cloud_config_v1';
+const CUSTOM_LS='oit_booking_custom_v2';
 let sbClient=null, profile=null, tab='all', cache=[];
+let customOptions={drivers:[],types:[],books:[]};
+let touched={driver:new Set(),guest:new Set()};
 
 const $=id=>document.getElementById(id);
 function showLogin(){$('loginView').classList.remove('hidden');$('requestView').classList.add('hidden')}
@@ -306,42 +317,87 @@ async function loadViewerBookings(){
 async function loadBookings(){
   if(profile?.role==='viewer')return loadViewerBookings();
   const {data,error}=await sbClient.rpc('get_bookings_full');
-  if(error)return alert(error.message);cache=data||[];render();
+  if(error)return alert(error.message);cache=data||[];rebuildOptions();render();
 }
 function fmtDate(s){if(!s)return '';const [y,m,d]=s.split('-');return d+' - '+m+' - '+y}
 function fmtTime(s){if(!s)return '';const [hh,mm]=s.split(':');let h=+hh;const ap=h>=12?'PM':'AM';h=h%12||12;return String(h).padStart(2,'0')+'.'+mm+' '+ap}
-function selected(id,customId){
-  const v=$(id).value; return v==='__CUSTOM__'?$(customId).value.trim():v;
+function loadCustomOptions(){
+  try{customOptions=JSON.parse(localStorage.getItem(CUSTOM_LS)||'{"drivers":[],"types":[],"books":[]}')||{};}catch{customOptions={drivers:[],types:[],books:[]};}
+  customOptions.drivers=[...new Set(customOptions.drivers||[])];
+  customOptions.types=[...new Set(customOptions.types||[])];
+  customOptions.books=[...new Set(customOptions.books||[])];
 }
-function readForm(){
-  return {note:$('note').value,driver:selected('driverName','driverCustom'),plate:$('plate').value.trim(),
-    type:selected('type','typeCustom'),number:$('number').value,time:$('time').value,date:$('date').value,
-    code:$('code').value.trim(),book:selected('book','bookCustom'),guest_name:$('guestName').value.trim(),
-    num_adult:$('numAdult').value,phone:$('phone').value.trim(),pickup:$('pickup').value.trim()};
+function saveCustomOptions(){localStorage.setItem(CUSTOM_LS,JSON.stringify(customOptions));}
+function uniqueNonEmpty(values){return [...new Set(values.filter(v=>String(v||'').trim()).map(v=>String(v).trim()))];}
+function rebuildOptions(){
+  const drivers=uniqueNonEmpty(['ADI PUTRA','AGUS WIDI','ALFA','ANANDA','BELEX','DOYOK','GEDE JERINK','GEDE KARI','JIK ONOT','KETUT WID','NENGAH JHON','PAK JUNY','PUTU ADI',...customOptions.drivers,...cache.map(b=>b.driver)]);
+  const types=uniqueNonEmpty(['AP','SGW','EW','SG',...customOptions.types,...cache.map(b=>b.type)]);
+  const books=uniqueNonEmpty(['Small Group Nusa Penida West Only Tour With Bali Transfer','Small Group Nusa Penida East & West Tour With Bali Transfer','Private Nusa Penida Highlight East & West Full Day Tour',...customOptions.books,...cache.map(b=>b.book)]);
+  fillSelectOptions('driverName',drivers,'Custom');
+  fillSelectOptions('type',types,'Custom');
+  fillSelectOptions('book',books,'Custom');
 }
-async function saveBooking(){
-  if(!profile)return;
-  if(profile.role==='viewer')return alert('Viewer hanya dapat melihat jadwal Driver.');
-  const b=readForm();
-  let existing=null;
-  if(b.code)existing=cache.find(x=>(x.code||'').trim()===b.code);
+function fillSelectOptions(id,values,customLabel){
+  const el=$(id), current=el.value; el.innerHTML='<option value="">—</option>';
+  values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)});
+  if(customLabel){const o=document.createElement('option');o.value='__CUSTOM__';o.textContent=customLabel;el.appendChild(o)}
+  if(values.includes(current))el.value=current;
+}
+function selected(id,customId){return $(id).value==='__CUSTOM__'?$(customId).value.trim():$(id).value;}
+function fmtDate(s){if(!s)return '';const [y,m,d]=s.split('-');return d+' - '+m+' - '+y}
+function fmtTime(s){if(!s)return '';const [hh,mm]=s.split(':');let h=+hh;const ap=h>=12?'PM':'AM';h=h%12||12;return String(h).padStart(2,'0')+'.'+mm+' '+ap}
+function localISODate(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+offset);const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+function toggleCustom(selectId,boxId){$(boxId).classList.toggle('hidden',$(selectId).value!=='__CUSTOM__');}
+function markTouched(group,field){touched[group].add(field);}
+function clearTouched(){touched={driver:new Set(),guest:new Set()};}
+function codeFor(group){return ($(group==='driver'?'driverCode':'guestCode').value||'').trim();}
+function existingByCode(code){return code?cache.find(x=>(x.code||'').trim()===code)||null:null;}
+function patchFrom(group){
+  const fields=group==='driver'
+    ?[['note','driverNote'],['driver','driverName'],['plate','plate'],['type','type'],['number','number'],['time','time'],['date','date'],['code','driverCode']]
+    :[['code','guestCode'],['book','book'],['guest_name','guestName'],['num_adult','numAdult'],['phone','phone'],['pickup','pickup'],['note','guestNote']];
+  const out={};
+  for(const [db,id] of fields){
+    if(!touched[group].has(db))continue;
+    let v=$(id)?.value??'';
+    if(v==='__CUSTOM__')v=selected(id,id==='driverName'?'driverCustom':id==='type'?'typeCustom':'bookCustom');
+    v=String(v).trim();
+    if(v!=='')out[db]=v;
+  }
+  return out;
+}
+async function saveGroup(group){
+  if(!profile||profile.role==='viewer')return alert('Viewer hanya dapat melihat jadwal Driver.');
+  const code=codeFor(group); const patch=patchFrom(group);
+  if(!Object.keys(patch).length)return alert('Isi atau ubah minimal satu data sebelum Save.');
+  if(!patch.code && code)patch.code=code;
+  if(group==='driver' && $('driverName').value==='__CUSTOM__'){
+    const v=selected('driverName','driverCustom'); if(v && $('saveDriverCustom').checked && !customOptions.drivers.includes(v)){customOptions.drivers.push(v);saveCustomOptions();}
+  }
+  if(group==='driver' && $('type').value==='__CUSTOM__'){
+    const v=selected('type','typeCustom'); if(v && $('saveTypeCustom').checked && !customOptions.types.includes(v)){customOptions.types.push(v);saveCustomOptions();}
+  }
+  if(group==='guest' && $('book').value==='__CUSTOM__'){
+    const v=selected('book','bookCustom'); if(v && $('saveBookCustom').checked && !customOptions.books.includes(v)){customOptions.books.push(v);saveCustomOptions();}
+  }
+  let existing=existingByCode(code);
   if(existing){
-    // Only non-empty fields are applied. Blank/default fields never overwrite existing values.
-    const patch={};
-    Object.entries(b).forEach(([k,v])=>{if(v!==''&&v!==null&&v!==undefined)patch[k]=v});
-    patch.updated_by=profile.id;
-    const {error}=await sbClient.from('bookings').update(patch).eq('id',existing.id);
+    // Keep every untouched/empty field exactly as stored.
+    const {error}=await sbClient.from('bookings').update({...patch,updated_by:profile.id}).eq('id',existing.id);
     if(error)return alert(error.message);
   }else{
-    b.created_by=profile.id;b.updated_by=profile.id;
-    const {error}=await sbClient.from('bookings').insert(b);
+    const row={...patch,created_by:profile.id,updated_by:profile.id};
+    const {error}=await sbClient.from('bookings').insert(row);
     if(error)return alert(error.message);
   }
-  clearForm();await loadBookings();alert(existing?'Booking berhasil dilengkapi berdasarkan Code.':'Booking berhasil disimpan.');
+  clearGroup(group);clearTouched();await loadBookings();rebuildOptions();alert(existing?'Booking berhasil dilengkapi berdasarkan Code.':'Data berhasil disimpan.');
 }
-function clearForm(){document.querySelectorAll('#bookingCard input,#bookingCard select').forEach(x=>{if(x.id!=='number'&&x.id!=='numAdult')x.value=''});$('number').value='1';$('numAdult').value='1'}
-function driverText(b){
-return `DRIVER ASSIGNMENT
+function saveDriverBooking(){return saveGroup('driver')}
+function saveGuestBooking(){return saveGroup('guest')}
+function clearDriverForm(){['driverNote','driverName','driverCustom','plate','type','typeCustom','number','time','date','driverCode'].forEach(id=>{if($(id))$(id).value=''});$('number').value='1';$('driverCustomBox').classList.add('hidden');$('typeCustomBox').classList.add('hidden');touched.driver=new Set();}
+function clearGuestForm(){['guestCode','book','bookCustom','guestName','numAdult','phone','pickup','guestNote'].forEach(id=>{if($(id))$(id).value=''});$('numAdult').value='1';$('bookCustomBox').classList.add('hidden');touched.guest=new Set();}
+function clearForm(){clearDriverForm();clearGuestForm();}
+function driverText(b){return `DRIVER ASSIGNMENT
 Outlook Indonesia Travel
 
 Driver       : ${b.driver||''}
@@ -354,10 +410,8 @@ Note         : ${b.note||''}
 Pick Up Time : ${fmtTime(b.time)}
 Guest Name   : ${b.guest_name||''}
 Guest Phone  : ${b.phone||''}
-Pick Up      : ${b.pickup||''}`;
-}
-function guestText(b){
-return `Dear Mr/Mrs ${b.guest_name||''}
+Pick Up      : ${b.pickup||''}`;}
+function guestText(b){return `Dear Mr/Mrs ${b.guest_name||''}
 
 Greetings from Outlook Indonesia Travel Get Your Guide Local Partner.
 
@@ -383,23 +437,38 @@ We hope you truly enjoy this trip and make lots of beautiful memories that you�
 
 Best Regards,
 
-Outlook Indonesia Travel`;
+Outlook Indonesia Travel`;}
+function dateMatches(b){
+  const f=$('dateFilter')?.value||'all'; if(f==='all')return true;
+  if(f==='today')return b.date===localISODate(0);
+  if(f==='tomorrow')return b.date===localISODate(1);
+  if(f==='7days'){const d=b.date;if(!d)return false;const now=new Date(localISODate(0)+'T12:00:00');const end=new Date(localISODate(6)+'T12:00:00');const x=new Date(d+'T12:00:00');return x>=now&&x<=end;}
+  if(f==='custom')return !$('searchDate').value||b.date===$('searchDate').value;
+  return true;
 }
+function dateFilterChanged(){const custom=$('dateFilter').value==='custom';$('searchDate').classList.toggle('hidden',!custom);render();}
 function render(){
-  const q=$('search').value.toLowerCase();let arr=cache.filter(b=>JSON.stringify(b).toLowerCase().includes(q));
-  if(tab==='driver')arr=arr.filter(b=>b.driver||b.plate);
-  if(tab==='guest')arr=arr.filter(b=>b.guest_name||b.phone);
-  $('saved').innerHTML=arr.map(b=>`<div class="item"><pre>${esc(tab==='driver'?driverText(b):tab==='guest'?guestText(b):(driverText(b)+'\\n\\n'+guestText(b)))}</pre>
-  <div class="row"><button onclick="edit('${b.id}')">Edit</button><button onclick="copyText(${JSON.stringify(tab==='driver'?driverText(b):tab==='guest'?guestText(b):(driverText(b)+'\\n\\n'+guestText(b)))})">Copy</button>${b.phone?`<button onclick="wa('${b.phone}',${JSON.stringify(guestText(b))})">WhatsApp Guest</button>`:''}<button class="danger" onclick="del('${b.id}')">Delete</button></div></div>`).join('')||'<p class="muted">Belum ada data.</p>';
+  const q=($('search').value||'').toLowerCase().trim();
+  let arr=cache.filter(b=>dateMatches(b));
+  if(q)arr=arr.filter(b=>JSON.stringify(b).toLowerCase().includes(q));
+  if(tab==='driver')arr=arr; // Driver Data intentionally includes guest-only bookings too.
+  if(tab==='guest')arr=arr.filter(b=>b.guest_name||b.phone||b.book||b.pickup);
+  $('saved').innerHTML=arr.map(b=>`<div class="item"><pre>${esc(tab==='driver'?driverText(b):tab==='guest'?guestText(b):(driverText(b)+'\n\n'+guestText(b)))}</pre>
+  <div class="row"><button onclick="edit('${b.id}')">Edit</button><button onclick="copyText(${JSON.stringify(tab==='driver'?driverText(b):tab==='guest'?guestText(b):(driverText(b)+'\n\n'+guestText(b)))})">Copy</button>${b.phone?`<button onclick="wa('${b.phone}',${JSON.stringify(guestText(b))})">WhatsApp Guest</button>`:''}<button class="danger" onclick="del('${b.id}')">Delete</button></div></div>`).join('')||'<p class="muted">Belum ada data pada tanggal/filter yang dipilih.</p>';
 }
-function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function esc(s){return String(s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
 function setTab(t){tab=t;['All','Driver','Guest'].forEach(x=>$('tab'+x).classList.remove('active'));$('tab'+t[0].toUpperCase()+t.slice(1)).classList.add('active');render()}
 function edit(id){
   if(profile?.role==='viewer')return alert('Viewer tidak dapat mengedit booking.');
   const b=cache.find(x=>x.id===id);if(!b)return;
+  clearForm();
   const set=(id,v)=>{if($(id))$(id).value=v||''};
-  set('note',b.note);set('plate',b.plate);set('number',b.number||'1');set('time',b.time);set('date',b.date);set('code',b.code);set('guestName',b.guest_name);set('numAdult',b.num_adult||'1');set('phone',b.phone);set('pickup',b.pickup);
+  set('driverNote',b.note);set('plate',b.plate);set('number',b.number||'1');set('time',b.time);set('date',b.date);set('driverCode',b.code);set('guestCode',b.code);
+  set('guestName',b.guest_name);set('numAdult',b.num_adult||'1');set('phone',b.phone);set('pickup',b.pickup);set('guestNote',b.note);
   set('driverName',b.driver);set('type',b.type);set('book',b.book);
+  touched.driver=new Set(['note','driver','plate','type','number','time','date','code']);
+  touched.guest=new Set(['code','book','guest_name','num_adult','phone','pickup','note']);
+  toggleCustom('driverName','driverCustomBox');toggleCustom('type','typeCustomBox');toggleCustom('book','bookCustomBox');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 async function del(id){if(profile?.role==='viewer')return alert('Viewer tidak dapat menghapus booking.');if(!confirm('Hapus booking ini?'))return;const {error}=await sbClient.from('bookings').delete().eq('id',id);if(error)return alert(error.message);loadBookings()}
@@ -408,7 +477,7 @@ function wa(phone,text){location.href='https://wa.me/'+phone.replace(/\D/g,'')+'
 function sendAllDrivers(){
   if(profile?.role==='viewer')return alert('Viewer tidak dapat mengirim WhatsApp Driver.');
   const n=$('driverWa').value.trim();if(!n)return alert('Isi WhatsApp Driver.');
-  const text=cache.filter(b=>b.driver||b.plate).map(driverText).join('\\n\\n────────────────────\\n\\n');
+  const text=cache.map(driverText).join('\n\n────────────────────\n\n');
   location.href='https://wa.me/'+n.replace(/\D/g,'')+'?text='+encodeURIComponent(text);
 }
 function exportExcel(){
@@ -416,10 +485,10 @@ function exportExcel(){
   const wb=XLSX.utils.book_new();
   const d=cache.map(b=>({Date:fmtDate(b.date),Time:fmtTime(b.time),Driver:b.driver,Plate:b.plate,Type:b.type,Number:b.number,Code:b.code,Note:b.note,'Guest Name':b.guest_name,Phone:b.phone,'Pick Up':b.pickup}));
   const g=cache.map(b=>({Date:fmtDate(b.date),Code:b.code,Note:b.note,Type:b.type,Number:b.number,Book:b.book,Name:b.guest_name,'Num Adult':b.num_adult,Phone:b.phone,'Pick Up':b.pickup}));
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d),'DRIVER');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(g),'GUEST');
-  XLSX.writeFile(wb,'outlook_indonesia_travel_bookings.xlsx');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d),'DRIVER');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(g),'GUEST');XLSX.writeFile(wb,'outlook_indonesia_travel_bookings.xlsx');
 }
 function backupJSON(){const blob=new Blob([JSON.stringify(cache,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='outlook_indonesia_travel_backup.json';a.click()}
+
 function showRequestFromAdmin(){
   alert('Cara menambah user:\n\n1. User baru buka aplikasi.\n2. Tekan Request Access.\n3. Isi Nama, Email, Password, lalu Kirim Request.\n4. Setelah muncul di User Management, Admin tekan Approve.\n5. Role awal otomatis Staff dan bisa diubah menjadi Viewer.');
 }
@@ -490,6 +559,10 @@ async function changeUserRole(uid,role){
 }
 
 // Fallback event handler: avoids relying on inline onclick.
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Service Worker:',e)));
+}
+
 document.addEventListener('DOMContentLoaded', function(){
   const btn=document.getElementById('saveCloudBtn');
   if(btn){
@@ -501,47 +574,16 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 async function init(){
-  for(let i=1;i<=100;i++){let o=document.createElement('option');o.value=i;o.textContent=i; $('number').appendChild(o);let a=o.cloneNode(true);a.textContent=i+' Adult';$('numAdult').appendChild(a)}
+  loadCustomOptions();
+  for(let i=1;i<=100;i++){let o=document.createElement('option');o.value=i;o.textContent=i;$('number').appendChild(o);let a=document.createElement('option');a.value=i;a.textContent=i+' Adult';$('numAdult').appendChild(a)}
   $('number').value='1';$('numAdult').value='1';
+  rebuildOptions();
+  $('driverName').addEventListener('change',()=>{toggleCustom('driverName','driverCustomBox');markTouched('driver','driver')});
+  $('type').addEventListener('change',()=>{toggleCustom('type','typeCustomBox');markTouched('driver','type')});
+  $('book').addEventListener('change',()=>{toggleCustom('book','bookCustomBox');markTouched('guest','book')});
+  [['driverNote','note','driver'],['plate','plate','driver'],['number','number','driver'],['time','time','driver'],['date','date','driver'],['driverCode','code','driver'],['driverCustom','driver','driver'],['typeCustom','type','driver'],['guestCode','code','guest'],['guestName','guest_name','guest'],['numAdult','num_adult','guest'],['phone','phone','guest'],['pickup','pickup','guest'],['guestNote','note','guest'],['bookCustom','book','guest']].forEach(([id,field,group])=>{const el=$(id);if(el){el.addEventListener('input',()=>markTouched(group,field));el.addEventListener('change',()=>markTouched(group,field));}});
   const c=cfg();if(c.url&&c.key){try{await connect();const {data:{session}}=await sbClient.auth.getSession();if(session)await startApp()}catch(e){console.error(e);msg('loginMsg','❌ Gagal memulihkan session: '+(e?.message||e))}}
 }
 init();
-</script>
-
-<script>
-(function(){
-  const btn=document.getElementById('pwaInstallBtn');
-  let deferredPrompt=null;
-  const standalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-  const hide=()=>{if(btn)btn.classList.remove('show');};
-  const show=()=>{if(btn&&!standalone())btn.classList.add('show');};
-  if(standalone()) hide();
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    deferredPrompt=e;
-    show();
-  });
-  window.addEventListener('appinstalled',function(){
-    deferredPrompt=null;
-    hide();
-  });
-  if(btn){
-    btn.addEventListener('click',async function(){
-      if(deferredPrompt){
-        deferredPrompt.prompt();
-        try{await deferredPrompt.userChoice;}catch(e){}
-        deferredPrompt=null;
-        return;
-      }
-      if(standalone()){hide();return;}
-      alert('Jika dialog instal belum muncul, buka menu Chrome (⋮) lalu pilih “Install app” atau “Tambahkan ke layar utama”.');
-    });
-  }
-  if('serviceWorker' in navigator){
-    window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(err){console.error('PWA service worker:',err);});
-    });
-  }
-})();
 </script>
 </body></html>
