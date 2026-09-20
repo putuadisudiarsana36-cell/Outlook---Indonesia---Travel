@@ -3,14 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="theme-color" content="#0f172a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Outlook Travel">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-
 <title>Outlook Indonesia Travel — Booking</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6fa;color:#172033}
@@ -30,9 +22,6 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<div id="pwaInstallBar" style="display:none;position:sticky;top:0;z-index:50;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:8px 12px;text-align:center">
-  <button id="pwaInstallBtn" class="primary" type="button" style="max-width:360px">📲 Install Outlook Indonesia Travel</button>
-</div>
 <header><h1>Outlook Indonesia Travel</h1><p>Get Your Guide Local Partner — Shared Booking System</p></header>
 
 <div id="loginView" class="login card">
@@ -84,6 +73,8 @@ textarea{min-height:78px;resize:vertical}button{cursor:pointer;font-weight:700}.
   </div>
 
   
+
+  <div id="viewerCard" class="card hidden"><h2>🚗 Driver Schedule</h2><p class="muted">Viewer hanya dapat melihat jadwal Driver hari ini dan besok.</p><div id="viewerToday"></div><div id="viewerTomorrow" style="margin-top:14px"></div></div>
 
   <div id="bookingCard" class="card">
     <h2>Booking Input</h2>
@@ -257,16 +248,51 @@ async function startApp(){
     $('appView').classList.remove('hidden');
     $('who').textContent=p.name||user.email;
     $('role').textContent=(p.role||'staff').toUpperCase();
-    if(p.role==='admin'){$('adminCard').classList.remove('hidden');loadUsers()}
-    await loadBookings();
+    if(p.role==='admin'){
+      $('adminCard').classList.remove('hidden');
+      await loadUsers();
+      await loadBookings();
+    } else if(p.role==='staff'){
+      await loadBookings();
+    } else if(p.role==='viewer'){
+      $('bookingCard').classList.add('hidden');
+      document.querySelectorAll('#appView > main > .card').forEach((el)=>{
+        if(el.id==='viewerCard' || el.querySelector('h2')?.textContent==='Saved Data') return;
+        if(el.id!=='viewerCard') el.classList.add('hidden');
+      });
+      $('viewerCard').classList.remove('hidden');
+      $('saved').closest('.card').classList.add('hidden');
+      await loadViewerBookings();
+    }
+
   }catch(e){
     console.error('startApp error:',e);
     try{await sbClient.auth.signOut()}catch(_){}
     msg('loginMsg','❌ Error saat membuka aplikasi: '+(e?.message||e));
   }
 }
+function localISODate(offset=0){
+  const d=new Date();
+  d.setHours(12,0,0,0);
+  d.setDate(d.getDate()+offset);
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function viewerCardHtml(title,rows){
+  if(!rows.length) return `<div class="item"><b>${title}</b><p class="muted">Tidak ada jadwal Driver.</p></div>`;
+  return `<div class="item"><h3 style="margin:0 0 8px">${title}</h3>`+rows.map(b=>`<div class="item" style="background:#fff"><pre>${esc(`Driver       : ${b.driver||''}\nVehicle      : ${b.plate||''}\nType / No.   : ${b.type||''}${b.number?'. '+b.number:''}\nDate         : ${fmtDate(b.date)}\nBooking Code : ${b.code||''}\nNote         : ${b.note||''}\n\nPick Up Time : ${fmtTime(b.time)}\nGuest Name   : ${b.guest_name||''}\nPick Up      : ${b.pickup||''}`)}</pre></div>`).join('')+`</div>`;
+}
+async function loadViewerBookings(){
+  const today=localISODate(0), tomorrow=localISODate(1);
+  const {data,error}=await sbClient.rpc('get_viewer_driver_schedule');
+  if(error){$('viewerToday').innerHTML=`<p class="err">❌ ${esc(error.message)}</p>`;return;}
+  const rows=(data||[]).filter(b=>b.date===today || b.date===tomorrow);
+  $('viewerToday').innerHTML=viewerCardHtml('TODAY — '+fmtDate(today),rows.filter(b=>b.date===today));
+  $('viewerTomorrow').innerHTML=viewerCardHtml('TOMORROW — '+fmtDate(tomorrow),rows.filter(b=>b.date===tomorrow));
+}
 async function loadBookings(){
-  const {data,error}=await sbClient.from('bookings').select('*').order('created_at',{ascending:false});
+  if(profile?.role==='viewer')return loadViewerBookings();
+  const {data,error}=await sbClient.rpc('get_bookings_full');
   if(error)return alert(error.message);cache=data||[];render();
 }
 function fmtDate(s){if(!s)return '';const [y,m,d]=s.split('-');return d+' - '+m+' - '+y}
@@ -282,6 +308,7 @@ function readForm(){
 }
 async function saveBooking(){
   if(!profile)return;
+  if(profile.role==='viewer')return alert('Viewer hanya dapat melihat jadwal Driver.');
   const b=readForm();
   let existing=null;
   if(b.code)existing=cache.find(x=>(x.code||'').trim()===b.code);
@@ -355,21 +382,24 @@ function render(){
 function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
 function setTab(t){tab=t;['All','Driver','Guest'].forEach(x=>$('tab'+x).classList.remove('active'));$('tab'+t[0].toUpperCase()+t.slice(1)).classList.add('active');render()}
 function edit(id){
+  if(profile?.role==='viewer')return alert('Viewer tidak dapat mengedit booking.');
   const b=cache.find(x=>x.id===id);if(!b)return;
   const set=(id,v)=>{if($(id))$(id).value=v||''};
   set('note',b.note);set('plate',b.plate);set('number',b.number||'1');set('time',b.time);set('date',b.date);set('code',b.code);set('guestName',b.guest_name);set('numAdult',b.num_adult||'1');set('phone',b.phone);set('pickup',b.pickup);
   set('driverName',b.driver);set('type',b.type);set('book',b.book);
   window.scrollTo({top:0,behavior:'smooth'});
 }
-async function del(id){if(!confirm('Hapus booking ini?'))return;const {error}=await sbClient.from('bookings').delete().eq('id',id);if(error)return alert(error.message);loadBookings()}
+async function del(id){if(profile?.role==='viewer')return alert('Viewer tidak dapat menghapus booking.');if(!confirm('Hapus booking ini?'))return;const {error}=await sbClient.from('bookings').delete().eq('id',id);if(error)return alert(error.message);loadBookings()}
 function copyText(t){navigator.clipboard?.writeText(t).then(()=>alert('Berhasil di-copy.'))}
 function wa(phone,text){location.href='https://wa.me/'+phone.replace(/\D/g,'')+'?text='+encodeURIComponent(text)}
 function sendAllDrivers(){
+  if(profile?.role==='viewer')return alert('Viewer tidak dapat mengirim WhatsApp Driver.');
   const n=$('driverWa').value.trim();if(!n)return alert('Isi WhatsApp Driver.');
   const text=cache.filter(b=>b.driver||b.plate).map(driverText).join('\\n\\n────────────────────\\n\\n');
   location.href='https://wa.me/'+n.replace(/\D/g,'')+'?text='+encodeURIComponent(text);
 }
 function exportExcel(){
+  if(profile?.role==='viewer')return alert('Viewer tidak dapat export Excel.');
   const wb=XLSX.utils.book_new();
   const d=cache.map(b=>({Date:fmtDate(b.date),Time:fmtTime(b.time),Driver:b.driver,Plate:b.plate,Type:b.type,Number:b.number,Code:b.code,Note:b.note,'Guest Name':b.guest_name,Phone:b.phone,'Pick Up':b.pickup}));
   const g=cache.map(b=>({Date:fmtDate(b.date),Code:b.code,Note:b.note,Type:b.type,Number:b.number,Book:b.book,Name:b.guest_name,'Num Adult':b.num_adult,Phone:b.phone,'Pick Up':b.pickup}));
@@ -464,41 +494,4 @@ async function init(){
 }
 init();
 </script>
-
-<script>
-(function(){
-  let deferredPrompt = null;
-  const bar = document.getElementById('pwaInstallBar');
-  const btn = document.getElementById('pwaInstallBtn');
-
-  window.addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault();
-    deferredPrompt = e;
-    if(bar) bar.style.display = 'block';
-  });
-
-  if(btn){
-    btn.addEventListener('click', async function(){
-      if(!deferredPrompt) return;
-      deferredPrompt.prompt();
-      try { await deferredPrompt.userChoice; } catch(e) {}
-      deferredPrompt = null;
-      bar.style.display = 'none';
-    });
-  }
-
-  window.addEventListener('appinstalled', function(){
-    deferredPrompt = null;
-    if(bar) bar.style.display = 'none';
-  });
-
-  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js', {scope:'./'})
-        .catch(function(err){ console.warn('PWA service worker:', err); });
-    });
-  }
-})();
-</script>
-
 </body></html>
