@@ -452,10 +452,21 @@ function normalizeWhatsAppNumber(raw){
 }
 function openWhatsApp(phone,text){
   const n=normalizeWhatsAppNumber(phone);
-  if(!n || n.length<8){alert('Nomor WhatsApp tamu tidak valid. Gunakan nomor dengan kode negara, contoh +628123456789.');return false;}
-  const url='https://web.whatsapp.com/send?phone='+n+'&text='+encodeURIComponent(text);
-  const w=window.open(url,'_blank','noopener,noreferrer');
-  if(!w) window.location.href=url;
+  if(!n || n.length<8){alert('Nomor WhatsApp tidak valid. Gunakan nomor dengan kode negara, contoh +628123456789.');return false;}
+  const encoded=encodeURIComponent(text);
+  const appUrl='whatsapp://send?phone='+n+'&text='+encoded;
+  const webUrl='https://wa.me/'+n+'?text='+encoded;
+  // Prioritaskan aplikasi WhatsApp di handphone/desktop.
+  // Jika custom protocol tidak tersedia, browser diarahkan ke wa.me sebagai fallback.
+  let fallbackTimer=setTimeout(()=>{
+    try{ window.location.href=webUrl; }catch(e){}
+  },1200);
+  const a=document.createElement('a');
+  a.href=appUrl;
+  a.style.display='none';
+  document.body.appendChild(a);
+  try{a.click();}catch(e){window.location.href=webUrl;}
+  setTimeout(()=>{clearTimeout(fallbackTimer);a.remove()},2000);
   return true;
 }
 function sendGuestWhatsApp(id){
